@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Wave and the Memory</title>
+<style>
+:root{
+  --page:#16223a; --page-ink:#d3d9e3; --page-mute:#93a0b6;
+  --ink:#0f1f3d; --ink2:#2a3a58; --mute:#5a6780; --line:rgba(15,31,61,.15);
+  --card:#1c2a45; --card-line:rgba(201,208,219,.16);
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(120% 80% at 50% 0%, #1f2e4b 0%, var(--page) 55%, #101a2d 100%) fixed;color:var(--page-ink);
+  font-family:"Segoe UI Variable Text","Segoe UI",Inter,system-ui,-apple-system,Roboto,sans-serif;line-height:1.45}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px 48px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:var(--page-mute);font-size:14px}
+.topbar b{color:var(--page-ink);font-weight:650}
+
+/* the scene: 16:9, a sheet of warm paper printed in indigo with one red; type sized from the scene's width */
+.stage{container-type:inline-size;position:relative;width:100%;aspect-ratio:16/9;border-radius:5px;overflow:hidden;color:var(--ink);
+  background:linear-gradient(170deg,#f4ebd7 0%,#efe5cf 50%,#e8dcc2 100%);box-shadow:0 0 0 1px rgba(255,255,255,.14),0 24px 60px rgba(0,0,0,.45)}
+.stage::after{content:"";position:absolute;inset:0;border:.85cqw solid #efe5cf;box-shadow:inset 0 0 0 1.5px rgba(15,31,61,.8);pointer-events:none}
+.washi,.art{position:absolute;inset:0;width:100%;height:100%}
+.washi{pointer-events:none}
+.head{position:absolute;left:0;right:0;top:0;padding:3.7cqw 4.4cqw 0;display:flex;gap:1.5cqw;align-items:flex-start;pointer-events:none}
+.hcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:1.1cqw}
+.top{display:flex;justify-content:space-between;align-items:center}
+.kicker{font-size:1.02cqw;letter-spacing:.16em;text-transform:uppercase;color:#2f4a7a;font-weight:700}
+.num{font-size:1cqw;color:var(--mute)}
+h1{margin:-.3cqw 0 0;font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;font-weight:700;font-size:3.1cqw;line-height:1.1;letter-spacing:-.01em;color:var(--ink)}
+.lead{margin:0;font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;font-size:1.46cqw;color:var(--ink2);max-width:39cqw;animation:tell .7s ease}
+.lead em{font-style:italic;color:var(--ink)}
+strong{color:var(--ink);font-weight:650}
+@keyframes tell{from{opacity:0;transform:translateY(.4cqw)}to{opacity:1;transform:none}}
+
+/* the drawing */
+.art text{font-family:"Segoe UI Variable Text","Segoe UI",Inter,system-ui,sans-serif}
+.art .k{font-size:16px;letter-spacing:.14em;font-weight:700;fill:#2f4a7a}
+.art .c{font-size:46px;font-weight:700;fill:#0f1f3d;letter-spacing:-.02em}
+.art .s{font-size:15px;fill:#4a556e}
+.art .q{font-size:22px;font-weight:700;fill:#0f1f3d;font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif}
+.art .b{font-size:18px;fill:#2a3a58}
+.art .n{font-size:30px;font-weight:700;fill:#0f1f3d;font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif}
+.art .it{font-size:17px;font-style:italic;fill:#0f1f3d;font-family:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif}
+.art .gt{font-size:13px;letter-spacing:.12em;font-weight:600;fill:#4a556e}
+.art .ga{font-size:12.5px;fill:#4a556e}
+.art .gl{font-size:13px;fill:#2a3a58}
+.act{opacity:0;transition:opacity .7s ease;pointer-events:none}
+.act.on{opacity:1}
+.unit{stroke:#0f1f3d;stroke-width:1.6;transition:fill .45s ease,stroke-opacity .45s ease}
+.unit.lit{fill:#0f1f3d}
+.unit.dark{fill:#f6eedb;stroke-opacity:.45}
+.unit.ghost{fill:#b9c3d3;stroke-opacity:.4;stroke-dasharray:2.5 2.5}
+.wire{stroke:#0f1f3d;stroke-width:1.5;stroke-opacity:.8;stroke-linecap:round;transition:stroke-opacity .45s ease}
+.wire.cut{stroke-opacity:.38}
+.wire.thin{stroke-opacity:.22;stroke-width:1.2}
+.wire.bold{stroke-width:2.8;stroke-opacity:.95}
+.wire.ghostw{stroke-opacity:.3;stroke-dasharray:4 5}
+.drop{fill:#f8f2e3;stroke:#0f1f3d;stroke-width:1.6}
+#lan{transition:transform 1.3s ease,opacity .7s ease}
+.lan{--paper:#fbf3dc;--halo:1;--flame:1}
+.lan.dim{--paper:#ddd5c0;--halo:.28;--flame:.4}
+.lan.out{--paper:#9aa7bd;--halo:0;--flame:0}
+#lan .lab1,#lan .lab2{opacity:0;transition:opacity .6s ease}
+#lan.l1 .lab1,#lan.l2 .lab2{opacity:1}
+.paper{fill:#f7f0df;stroke:#0f1f3d;stroke-width:2.2}
+
+/* controls and notes under the scene */
+.ctl{display:flex;align-items:center;gap:10px 14px;margin-top:12px;font-size:14px;flex-wrap:wrap}
+.ctl button{appearance:none;font:inherit;color:var(--page-ink);background:rgba(255,255,255,.06);border:1px solid rgba(201,208,219,.28);border-radius:9px;padding:7px 14px;cursor:pointer}
+.ctl button:hover{background:rgba(255,255,255,.12)} .ctl button:disabled{opacity:.35;cursor:default}
+.ctl .next,.ctl button[aria-pressed="true"]{background:linear-gradient(180deg,#e9ecf1,#c3cad5);color:#0f1f3d;border-color:#e9ecf1;font-weight:600}
+.ctl button:focus-visible,.ctl input:focus-visible{outline:2px solid #8fb0ff;outline-offset:2px}
+.dots{display:flex;gap:6px;margin:0 auto}
+.dots button{width:26px;height:26px;padding:0;border-radius:50%;font-size:12px;color:var(--page-mute)}
+.dots button.on{background:#e9ecf1;color:#0f1f3d;border-color:#e9ecf1;font-weight:700}
+.where{color:var(--page-mute)}
+.grp{display:flex;align-items:center;gap:6px}
+.lbl{color:var(--page-mute);font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;margin-right:4px}
+.scrub{display:flex;align-items:center;gap:8px;flex:1;min-width:260px}
+.scrub input{flex:1;accent-color:#c9d0db;min-width:120px}
+.scrub output{min-width:52px;text-align:right;color:#fff;font-weight:600;font-variant-numeric:tabular-nums}
+.free[hidden]{display:none}
+.ctl .where{margin:0 auto 0 6px}
+.step{display:flex;gap:6px} .step button{width:38px;padding:7px 0}
+.bar{display:flex;gap:10px;margin-top:12px}
+.chp{display:flex;flex-direction:column;gap:5px;flex-basis:0;min-width:0}
+.segs{display:flex;gap:3px}
+.segs button{appearance:none;flex-basis:0;min-width:3px;height:10px;padding:0;border:0;border-radius:3px;background:rgba(201,208,219,.2);cursor:pointer;position:relative;overflow:hidden}
+.segs button:hover{background:rgba(201,208,219,.42)}
+.segs button:focus-visible{outline:2px solid #8fb0ff;outline-offset:2px}
+.segs button i{position:absolute;left:0;top:0;bottom:0;width:0;background:#e9ecf1}
+.segs button.done i{width:100%}
+.chp small{font-size:11px;color:var(--page-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chp.on small{color:#fff}
+.notes{display:grid;margin-top:16px;grid-template-columns:1.4fr 1fr;gap:16px}
+.np{background:var(--card);border:1px solid var(--card-line);border-radius:14px;padding:16px 20px;font-size:15px;color:var(--page-ink)}
+.np h2{margin:0 0 8px;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--page-mute);font-weight:600}
+.np p{margin:.5em 0} .np b{color:#fff;font-weight:600}
+.np ol{margin:0;padding-left:20px;font-size:13.5px;color:var(--page-ink)} .np ol li{margin:3px 0}
+.np i{color:#e3e8f0}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px} dt{font-weight:600;color:#fff} dd{margin:0;color:var(--page-mute)}
+.foot{margin-top:14px;font-size:12.5px;color:var(--page-mute)}
+
+@media (max-width:760px){
+  .stage{aspect-ratio:auto;display:flex;flex-direction:column}
+  .head{position:relative;order:1;padding:22px 18px 10px;gap:12px} .hcol{gap:8px}
+  .art{position:relative;order:2;display:block;height:auto;aspect-ratio:16/9}
+  .kicker,.num{font-size:11px} h1{font-size:23px} .lead{font-size:15px;max-width:none}
+  .notes{grid-template-columns:1fr}
+}
+.still .unit,.still .wire,.still .act,.still #lan,.still #lan .lab1,.still #lan .lab2{transition:none} .still .lead{animation:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topbar"><span><b>Athena Brain</b> · interactive story · English</span><span></span></div>
+
+<div class="stage" id="stage">
+  <!-- the paper of the print: warm, with fibres and the grain of the block -->
+  <svg class="washi" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <filter id="grain" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="7" stitchTiles="stitch"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 .36  0 0 0 0 .26  0 0 0 0 .12  0 0 0 .5 -.2"/>
+      </filter>
+      <filter id="fibre" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency=".005 .4" numOctaves="2" seed="3"/>
+        <feColorMatrix type="matrix" values="0 0 0 0 .45  0 0 0 0 .33  0 0 0 0 .16  0 0 0 1.1 -.5"/>
+      </filter>
+      <radialGradient id="vig" cx=".5" cy=".45" r=".78"><stop offset=".62" stop-color="#8a6a3a" stop-opacity="0"/><stop offset="1" stop-color="#8a6a3a" stop-opacity=".2"/></radialGradient>
+    </defs>
+    <rect width="1600" height="900" filter="url(#fibre)" opacity=".5"/>
+    <rect width="1600" height="900" filter="url(#grain)"/>
+    <rect width="1600" height="900" fill="url(#vig)"/>
+  </svg>
+
+  <!-- the print -->
+  <svg class="art" id="art" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="artd">
+    <desc id="artd">A drawing in the manner of a Japanese woodblock print, in indigo on warm paper with a red sun, that changes with the story: a paper lantern on a pale sea stands for one remembered sentence, and a great wave on the right, small at first, grows with each chapter.</desc>
+    <defs>
+      <path id="lipTop" d="M742 352 C760 285 830 215 930 180 C1040 142 1180 150 1300 205"/>
+      <path id="lipRoof" d="M742 352 C790 300 860 290 930 325"/>
+      <path id="body" d="M800 960 C900 860 1000 740 1030 600 C1055 480 1030 380 930 325 C860 290 790 300 742 352 C760 285 830 215 930 180 C1040 142 1180 150 1300 205 C1420 260 1520 320 1800 400 L1800 1100 L700 1100 Z"/>
+      <clipPath id="bodyClip"><use href="#body"/></clipPath>
+      <clipPath id="wClip"><rect id="wClipR" x="-100" y="-300" width="1900" height="755"/></clipPath>
+      <radialGradient id="glow"><stop offset="0" stop-color="#fff6d2" stop-opacity=".98"/><stop offset=".45" stop-color="#ffd98a" stop-opacity=".5"/><stop offset="1" stop-color="#ffd98a" stop-opacity="0"/></radialGradient>
+      <linearGradient id="skyTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4477" stop-opacity=".78"/><stop offset=".5" stop-color="#1d4477" stop-opacity=".3"/><stop offset="1" stop-color="#1d4477" stop-opacity="0"/></linearGradient>
+      <linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e59a7c" stop-opacity="0"/><stop offset="1" stop-color="#e59a7c" stop-opacity=".42"/></linearGradient>
+      <linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4f8f" stop-opacity=".6"/><stop offset=".08" stop-color="#3f7fc4" stop-opacity=".3"/><stop offset=".6" stop-color="#3f7fc4" stop-opacity=".3"/><stop offset="1" stop-color="#1d4f8f" stop-opacity=".46"/></linearGradient>
+      <radialGradient id="cloudG" cx=".36" cy=".26" r=".9"><stop offset="0" stop-color="#fffdf6"/><stop offset=".5" stop-color="#f9f1e1"/><stop offset=".78" stop-color="#e2d5cb"/><stop offset="1" stop-color="#9fb0c9"/></radialGradient>
+      <linearGradient id="bandG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbf0"/><stop offset="1" stop-color="#e7dbcf"/></linearGradient>
+      <linearGradient id="hillG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f679c" stop-opacity=".62"/><stop offset="1" stop-color="#3f679c" stop-opacity=".08"/></linearGradient>
+      <pattern id="seig" width="44" height="22" patternUnits="userSpaceOnUse">
+        <rect width="44" height="22" fill="#17335e"/>
+        <g fill="#17335e" stroke="#5b88ba" stroke-opacity=".7" stroke-width="1.3">
+          <circle cx="22" cy="-11" r="21.3"/><circle cx="22" cy="-11" r="14" fill="none"/><circle cx="22" cy="-11" r="7" fill="none"/>
+          <circle cx="0" cy="0" r="21.3"/><circle cx="0" cy="0" r="14" fill="none"/><circle cx="0" cy="0" r="7" fill="none"/>
+          <circle cx="44" cy="0" r="21.3"/><circle cx="44" cy="0" r="14" fill="none"/><circle cx="44" cy="0" r="7" fill="none"/>
+          <circle cx="22" cy="11" r="21.3"/><circle cx="22" cy="11" r="14" fill="none"/><circle cx="22" cy="11" r="7" fill="none"/>
+          <circle cx="0" cy="22" r="21.3"/><circle cx="0" cy="22" r="14" fill="none"/><circle cx="0" cy="22" r="7" fill="none"/>
+          <circle cx="44" cy="22" r="21.3"/><circle cx="44" cy="22" r="14" fill="none"/><circle cx="44" cy="22" r="7" fill="none"/>
+          <circle cx="22" cy="33" r="21.3"/><circle cx="22" cy="33" r="14" fill="none"/>
+        </g>
+      </pattern>
+      <g id="lanShape">
+        <circle cy="-44" r="96" fill="url(#glow)" style="opacity:var(--halo,1)"/>
+        <path d="M-26 22 H26 M-17 34 H17 M-9 46 H9" stroke="#ffe2a0" stroke-width="3" stroke-linecap="round" fill="none" style="opacity:var(--halo,1)"/>
+        <path d="M-36 0 H36 L27 11 H-27 Z" fill="#0f1f3d"/>
+        <rect x="-24" y="-76" width="48" height="74" style="fill:var(--paper,#fbf3dc)" stroke="#0f1f3d" stroke-width="2.4"/>
+        <path d="M-8 -76 V-2 M8 -76 V-2 M-24 -39 H24" stroke="#0f1f3d" stroke-opacity=".28" fill="none"/>
+        <rect x="-29" y="-84" width="58" height="9" rx="2" fill="#0f1f3d"/>
+        <path d="M0 -52 C7 -43 7 -33 0 -29 C-7 -33 -7 -43 0 -52 Z" fill="#c8442b" style="opacity:var(--flame,1)"/>
+      </g>
+      <g id="seal"><circle r="17" fill="#c8442b"/><circle r="13" fill="none" stroke="#f1e8d2" stroke-opacity=".6"/><path d="M-6.5 0 L-2 5 L7 -5.5" fill="none" stroke="#f8f2e3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g id="isle"><path d="M-64 0 C-44 -34 -14 -48 2 -48 C18 -48 42 -30 64 0 Z"/></g>
+    </defs>
+
+    <!-- the sky of the print: a graded band at the top, a dawn glow, a red sun, clouds, a far shore -->
+    <g id="sky">
+      <rect x="0" y="0" width="1600" height="54" fill="url(#skyTop)"/>
+      <rect x="0" y="300" width="1600" height="155" fill="url(#dawn)"/>
+      <circle cx="1118" cy="262" r="88" fill="#c8442b" fill-opacity=".9"/>
+      <g id="clouds"></g>
+      <path d="M0 455 V430 C60 416 112 400 172 407 C232 414 256 435 322 437 C384 439 432 426 484 439 C524 448 566 452 610 455 Z" fill="url(#hillG)"/>
+      <path d="M0 430 C60 416 112 400 172 407 C232 414 256 435 322 437 C384 439 432 426 484 439 C524 448 566 452 610 455" fill="none" stroke="#17335e" stroke-opacity=".45" stroke-width="1.3"/>
+    </g>
+    <g id="sea">
+      <path d="M0 455 H1600 V900 H0 Z" fill="url(#seaG)"/>
+      <path d="M0 455 H1600" stroke="#0f1f3d" stroke-opacity=".55" stroke-width="1.6" fill="none"/>
+      <g fill="none" stroke="#0f1f3d" stroke-opacity=".28" stroke-width="1.5" stroke-linecap="round">
+        <path d="M40 492 q13 -8 26 0 q13 -8 26 0"/><path d="M400 478 q13 -8 26 0 q13 -8 26 0"/>
+        <path d="M880 500 q13 -8 26 0 q13 -8 26 0"/><path d="M22 610 q15 -9 30 0 q15 -9 30 0"/>
+        <path d="M1180 520 q13 -8 26 0 q13 -8 26 0"/><path d="M1330 640 q15 -9 30 0 q15 -9 30 0"/>
+        <path d="M620 470 q11 -7 22 0 q11 -7 22 0"/><path d="M230 470 q11 -7 22 0 q11 -7 22 0"/>
+        <path d="M1040 760 q17 -10 34 0 q17 -10 34 0"/><path d="M1420 800 q17 -10 34 0 q17 -10 34 0"/>
+      </g>
+    </g>
+
+    <!-- chapter 1: the filing system -->
+    <g class="act" data-on="1.2 1.3" transform="translate(520 505)">
+      <path d="M-22 232 H322 L304 250 H-4 Z" fill="#0f1f3d"/>
+      <rect width="300" height="232" rx="5" class="paper" stroke-width="3"/>
+      <g fill="#e9dfc6" stroke="#0f1f3d" stroke-width="1.6">
+        <rect x="14" y="14" width="62" height="60"/><rect x="84" y="14" width="62" height="60"/><rect x="154" y="14" width="62" height="60"/><rect x="224" y="14" width="62" height="60"/>
+        <rect x="14" y="86" width="62" height="60"/><rect x="84" y="86" width="62" height="60"/><rect x="224" y="86" width="62" height="60"/>
+        <rect x="14" y="158" width="62" height="60"/><rect x="84" y="158" width="62" height="60"/><rect x="154" y="158" width="62" height="60"/><rect x="224" y="158" width="62" height="60"/>
+      </g>
+      <g stroke="#0f1f3d" stroke-width="2.4" stroke-linecap="round">
+        <path d="M36 44 H54 M106 44 H124 M176 44 H194 M246 44 H264 M36 116 H54 M106 116 H124 M246 116 H264 M36 188 H54 M106 188 H124 M176 188 H194 M246 188 H264"/>
+      </g>
+      <rect x="154" y="86" width="62" height="60" fill="#0f1f3d" stroke="#0b1830" stroke-width="2"/>
+      <path d="M164 104 H206 M164 116 H200 M164 128 H190" stroke="#f8f2e3" stroke-width="2.2" stroke-linecap="round"/>
+      <text class="s" x="150" y="282" text-anchor="middle">a card in a cabinet: kept until deleted</text>
+      <path d="M-196 150 C-140 96 -70 96 148 116" fill="none" stroke="#0f1f3d" stroke-opacity=".5" stroke-width="1.6" stroke-dasharray="5 6"/>
+    </g>
+    <g class="act" data-on="1.3">
+      <rect x="930" y="520" width="196" height="58" rx="29" class="paper"/>
+      <text class="it" x="1028" y="555" text-anchor="middle" style="font-size:19px">“a fig tree?”</text>
+      <path d="M930 556 C860 580 800 600 740 618" fill="none" stroke="#0f1f3d" stroke-width="1.8" stroke-dasharray="5 6"/>
+      <path d="M752 606 L738 619 L756 623" fill="none" stroke="#0f1f3d" stroke-width="1.8"/>
+      <text class="k" x="700" y="488" text-anchor="middle">BEST MATCH</text>
+      <path d="M700 494 V586" stroke="#2f4a7a" stroke-width="1.4" fill="none"/>
+    </g>
+
+    <!-- chapter 2: the pattern -->
+    <g class="act" data-on="2.*" id="net1"></g>
+    <path class="act" data-on="2.*" d="M262 668 C320 640 370 650 420 672" fill="none" stroke="#0f1f3d" stroke-opacity=".5" stroke-width="1.6" stroke-dasharray="5 6"/>
+    <text class="act s" data-on="2.1" x="650" y="548" text-anchor="middle">cells active together, and the connections between them</text>
+    <text class="act s" data-on="2.2" x="650" y="548" text-anchor="middle">a few cells wake, and they wake the rest</text>
+    <g class="act" data-on="2.3"><text class="k" x="470" y="548">RETURNED TO OFTEN</text><text class="k" x="748" y="548" style="fill:#4a556e">NEVER USED: FADING</text></g>
+    <text class="act k" data-on="2.4" x="650" y="548" text-anchor="middle" style="fill:#a8371f">FILLED IN, AND WRONG</text>
+
+    <!-- chapter 3: the two keepers -->
+    <g class="act" data-on="3.*" transform="translate(80 492)">
+      <rect width="390" height="300" rx="6" class="paper"/><rect x="6" y="6" width="378" height="288" rx="3" fill="none" stroke="#0f1f3d" stroke-opacity=".3"/>
+      <g transform="translate(26 26) scale(1.6)" fill="none" stroke="#0f1f3d" stroke-width="1.6"><rect x="8" y="10" width="48" height="44" rx="3"/><path d="M8 24h48M8 39h48M18 10v44M30 10v14M30 24v15M42 24v15M42 39v15"/></g>
+      <text class="n" x="150" y="88">The librarian</text>
+      <text class="b" x="30" y="166">+ finds any card, exactly</text><text class="b" x="30" y="196">+ never invents one</text>
+      <text class="b" x="30" y="238" style="fill:#4a556e">− one torn card: gone for good</text><text class="b" x="30" y="268" style="fill:#4a556e">− a vague question: nothing</text>
+    </g>
+    <g class="act" data-on="3.2 3.3" transform="translate(500 492)">
+      <rect width="390" height="300" rx="6" class="paper"/><rect x="6" y="6" width="378" height="288" rx="3" fill="none" stroke="#0f1f3d" stroke-opacity=".3"/>
+      <g transform="translate(26 26) scale(1.6)" fill="none" stroke="#0f1f3d" stroke-width="1.6"><circle cx="32" cy="22" r="10"/><path d="M14 54c2-11 9-17 18-17s16 6 18 17"/><path d="M46 12c4 2 6 6 6 10M50 6c6 3 9 9 9 16" stroke-opacity=".55"/></g>
+      <text class="n" x="150" y="88">The friend</text>
+      <text class="b" x="30" y="166">+ finds it from half a hint</text><text class="b" x="30" y="196">+ copes when details are lost</text>
+      <text class="b" x="30" y="238" style="fill:#4a556e">− sometimes sure, and wrong</text>
+    </g>
+
+    <!-- chapter 4: the two memories under the wave -->
+    <g class="act" data-on="4.*" id="nets"></g>
+    <g class="act" data-on="4.*">
+      <text class="k" x="105" y="530">EXACT-STYLE MEMORY</text>
+      <text class="c" x="105" y="577" id="cEx">1.00</text>
+      <text class="s" x="212" y="577" id="sEx">of told facts answered right</text>
+      <text class="k" x="540" y="545" transform="translate(0 2)">HYBRID DESIGN</text>
+      <text class="c" x="540" y="594" id="cHy">1.00</text>
+      <text class="s" x="647" y="594">of told facts answered right</text>
+    </g>
+
+    <!-- chapter 5: the four answers -->
+    <g class="act" data-on="5.*">
+      <g text-anchor="middle">
+        <text class="k" x="165" y="548">KNOW</text><text class="q" x="165" y="580">“I know it.”</text><text class="s" x="165" y="818">found exactly as told</text>
+        <text class="k" x="395" y="548">FAMILIAR</text><text class="q" x="395" y="580">“That rings a bell.”</text><text class="s" x="395" y="818">something is there</text>
+        <text class="k" x="625" y="548">KNEW ONCE</text><text class="q" x="625" y="580">“I knew that once.”</text><text class="s" x="625" y="818">learned, then faded</text>
+        <text class="k" x="850" y="548">DON'T KNOW</text><text class="q" x="850" y="580">“I don't know.”</text><text class="s" x="850" y="818">nothing there</text>
+      </g>
+      <use href="#lanShape" class="lan" transform="translate(165 738) scale(1.1)"/>
+      <use href="#lanShape" class="lan dim" transform="translate(395 738) scale(1.1)"/>
+      <use href="#lanShape" class="lan out" transform="translate(625 738) scale(1.1)"/>
+      <g fill="none" stroke="#0f1f3d" stroke-opacity=".4" stroke-width="1.6"><ellipse cx="850" cy="738" rx="44" ry="9"/><ellipse cx="850" cy="738" rx="24" ry="5"/></g>
+    </g>
+
+    <!-- chapter 6: keeping the numbers honest -->
+    <g class="act" data-on="6.*" transform="translate(96 498)">
+      <rect width="236" height="300" rx="4" class="paper"/>
+      <rect x="22" y="24" width="120" height="12" fill="#0f1f3d"/>
+      <path d="M22 62 H214 M22 84 H214 M22 106 H190 M22 128 H214 M22 150 H170 M22 172 H214 M22 194 H120" stroke="#0f1f3d" stroke-opacity=".3" stroke-width="2"/>
+      <circle cx="166" cy="232" r="46" fill="#c8442b"/><circle cx="166" cy="232" r="38" fill="none" stroke="#f1e8d2" stroke-opacity=".6" stroke-width="1.5"/>
+      <rect x="150" y="228" width="32" height="24" rx="3" fill="#f8f2e3"/><path d="M156 228 V219 a10 10 0 0 1 20 0 V228" fill="none" stroke="#f8f2e3" stroke-width="4"/>
+      <text class="s" x="118" y="328" text-anchor="middle">the test plan, locked before the run</text>
+    </g>
+    <g class="act" data-on="6.*"><use href="#seal" transform="translate(410 532)"/><text class="b" x="442" y="538">Plan and pass marks are locked before the test runs</text></g>
+    <g class="act" data-on="6.2 6.3 6.4">
+      <use href="#seal" transform="translate(410 584)"/><text class="b" x="442" y="590">Ten fresh networks, never used for practice</text>
+      <use href="#seal" transform="translate(410 636)"/><text class="b" x="442" y="642">A separate recount from the raw files, done blind</text>
+      <use href="#seal" transform="translate(410 688)"/><text class="b" x="442" y="694">A plain rival: the simplest tool for the same job</text>
+    </g>
+    <g class="act" data-on="6.3 6.4"><use href="#seal" transform="translate(410 740)"/><text class="b" x="442" y="746" style="font-weight:650;fill:#0f1f3d">A failure stays on the record: 19 false answers, then none</text></g>
+    <g class="act" data-on="6.4"><use href="#seal" transform="translate(410 792)"/><text class="b" x="442" y="798" style="font-weight:650;fill:#0f1f3d">A second reviewer before locking: a gap found, the test held back</text></g>
+
+    <!-- chapter 7: where the story is now -->
+    <g class="act" data-on="7.*">
+      <g stroke="#0b1830" stroke-width="2.4">
+        <use href="#isle" fill="#17335e" transform="translate(170 650) scale(1.25)"/><use href="#isle" fill="#3f679c" transform="translate(470 610) scale(1.05)"/>
+        <use href="#isle" fill="#e9dfc6" transform="translate(760 572) scale(.85)"/><use href="#isle" fill="#e9dfc6" transform="translate(1010 536) scale(.7)"/>
+      </g>
+      <path d="M250 644 C330 624 380 614 404 610 M536 604 C610 588 660 580 706 574 M814 566 C880 552 930 544 966 540" fill="none" stroke="#0f1f3d" stroke-opacity=".45" stroke-width="1.6" stroke-dasharray="5 6"/>
+      <g text-anchor="middle">
+        <text class="k" x="170" y="686">STAGE 1 · DONE</text><text class="b" x="170" y="711">a memory that works</text>
+        <text class="k" x="470" y="660">STAGE 2 · UNDER WAY</text><text class="b" x="470" y="685">talking to it</text>
+        <text class="k" x="760" y="608" style="fill:#4a556e">STAGE 3 · LATER</text><text class="b" x="760" y="633">learning all the time</text>
+        <text class="k" x="1010" y="572" style="fill:#4a556e">STAGE 4 · LATER</text><text class="b" x="1010" y="597">judging itself</text>
+      </g>
+    </g>
+
+    <!-- the lantern: one remembered sentence -->
+    <g id="lan" class="lan" style="opacity:0">
+      <use href="#lanShape"/>
+      <text class="it lab1" y="-102" text-anchor="middle">“Maja planted a fig tree.”</text>
+      <text class="it lab2" y="-102" text-anchor="middle">“Maja planted an olive tree.”</text>
+    </g>
+
+    <!-- the wave -->
+    <g clip-path="url(#wClip)"><g id="waveOuter"><g id="wave">
+      <use href="#body" fill="#17335e"/>
+      <g clip-path="url(#bodyClip)" fill="none" stroke-linecap="round">
+        <path d="M880 1000 C985 850 1075 730 1092 600 C1108 470 1070 372 960 305 C905 272 840 282 800 318" stroke="#5b88ba" stroke-width="26"/>
+        <path d="M1010 1000 C1100 860 1160 735 1168 605 C1176 460 1120 340 1000 262 C940 226 880 232 838 262" stroke="#26508c" stroke-width="30"/>
+        <path d="M1160 1000 C1235 870 1262 740 1258 615 C1252 460 1190 320 1070 228" stroke="#5b88ba" stroke-width="24"/>
+        <path d="M1330 1000 C1385 880 1392 750 1380 630 C1362 480 1300 340 1200 250" stroke="#26508c" stroke-width="30"/>
+        <path d="M1500 1000 C1530 880 1520 760 1500 650 C1472 520 1420 400 1340 300" stroke="#5b88ba" stroke-width="22"/>
+      </g>
+      <use href="#body" fill="none" stroke="#0b1830" stroke-width="3" stroke-linejoin="round"/>
+      <g id="foamLine"></g><g id="foamFill"></g><g id="claws"></g>
+    </g></g></g>
+
+    <g class="act" data-on="4.*" id="spray"></g>
+
+    <g id="fore">
+      <path d="M-20 856 C120 824 260 884 420 852 C560 826 700 882 900 864 C1100 846 1300 884 1640 858 L1640 1000 L-20 1000 Z" fill="url(#seig)" stroke="#0b1830" stroke-width="2.5"/>
+      <path d="M-20 863 C120 831 260 891 420 859 C560 833 700 889 900 871 C1100 853 1300 891 1640 865" fill="none" stroke="#f8f2e3" stroke-opacity=".9" stroke-width="3.5" stroke-linecap="round"/>
+      <g class="act" data-on="4.*">
+        <g stroke="#0f1f3d" stroke-linecap="round"><path d="M128 842 L-30 752" stroke-width="5"/><path d="M128 842 L398 936" stroke-width="5"/><path d="M128 842 L214 760" stroke-width="3.2" stroke-opacity=".7"/></g>
+        <circle cx="128" cy="842" r="40" fill="#0f1f3d" stroke="#0b1830" stroke-width="3"/>
+        <circle cx="128" cy="842" r="29" fill="none" stroke="#f1e8d2" stroke-opacity=".5" stroke-width="2"/>
+      </g>
+    </g>
+
+    <!-- the measured curves, on the wave -->
+    <g class="act" data-on="4.*" transform="translate(1108 572)">
+      <rect width="446" height="292" rx="6" fill="#f7f0df" stroke="#0f1f3d" stroke-width="2"/>
+      <rect x="6" y="6" width="434" height="280" rx="3" fill="none" stroke="#0f1f3d" stroke-opacity=".3"/>
+      <text class="gt" x="22" y="34">SHARE OF TOLD FACTS ANSWERED RIGHT</text>
+      <g stroke="#2a3a58" stroke-opacity=".16"><path d="M64 58 H424 M64 135 H424"/></g>
+      <path d="M64 54 V212 H424" stroke="#4a556e" fill="none"/>
+      <g class="ga">
+        <text x="56" y="62" text-anchor="end">1.0</text><text x="56" y="139" text-anchor="end">0.5</text><text x="56" y="216" text-anchor="end">0</text>
+        <text x="64" y="230" text-anchor="middle">0 %</text><text x="136" y="230" text-anchor="middle">10 %</text><text x="208" y="230" text-anchor="middle">20 %</text>
+        <text x="280" y="230" text-anchor="middle">30 %</text><text x="352" y="230" text-anchor="middle">40 %</text><text x="424" y="230" text-anchor="middle">50 %</text>
+        <text x="244" y="250" text-anchor="middle">connections cut at random, no repair</text>
+      </g>
+      <polyline id="gEx" fill="none" stroke="#4a556e" stroke-width="2.2" stroke-dasharray="6 4"/>
+      <polyline id="gHy" fill="none" stroke="#0f1f3d" stroke-width="2.4"/>
+      <text class="gl" x="78" y="170">exact-style</text>
+      <text class="gl" x="364" y="116" style="fill:#0f1f3d">hybrid</text>
+      <line id="gM" y1="54" y2="212" stroke="#0f1f3d" stroke-opacity=".55" stroke-width="1.2"/>
+      <circle id="gDe" r="4" fill="#4a556e"/><circle id="gDh" r="4" fill="#0f1f3d"/>
+      <text class="ga" x="22" y="265" style="fill:#2a3a58">Pilot of an earlier version of the design:</text>
+      <text class="ga" x="22" y="279" style="fill:#2a3a58">three practice networks, 300 told facts each; line = mean.</text>
+    </g>
+    <g class="act" data-on="5.2" transform="translate(1108 610)">
+      <rect width="446" height="230" rx="6" fill="#f7f0df" stroke="#0f1f3d" stroke-width="2"/>
+      <rect x="6" y="6" width="434" height="218" rx="3" fill="none" stroke="#0f1f3d" stroke-opacity=".3"/>
+      <text class="gt" x="26" y="40">CONFIDENT WRONG ANSWERS</text>
+      <text x="26" y="130" style="font-size:84px;font-weight:700;fill:#0f1f3d;letter-spacing:-.03em">0</text>
+      <text x="92" y="130" style="font-size:30px;font-weight:600;fill:#4a556e">/ 124,280</text>
+      <text class="ga" x="26" y="170" style="fill:#2a3a58;font-size:14px">The most recent locked test: ten fresh networks,</text>
+      <text class="ga" x="26" y="192" style="fill:#2a3a58;font-size:14px">including 1,000 facts hung on one word.</text>
+    </g>
+  </svg>
+
+  <div class="head">
+    <div class="hcol">
+      <div class="top"><span class="kicker" id="kick"></span><span class="num" id="num"></span></div>
+      <h1 id="ttl"></h1>
+      <p class="lead" id="txt"></p>
+    </div>
+  </div>
+</div>
+
+<nav class="ctl" aria-label="Story controls">
+  <span class="grp" role="group" aria-label="Speed of the story"><span class="lbl">Time</span>
+    <button type="button" data-mode="frozen" aria-pressed="false">Freeze</button>
+    <button type="button" data-mode="slow" aria-pressed="false">Slow</button>
+    <button type="button" data-mode="normal" aria-pressed="false">Normal</button>
+    <button type="button" data-mode="fast" aria-pressed="false">Fast</button></span>
+  <span class="where" id="where"></span>
+  <span class="step"><button type="button" id="prev" aria-label="One step back" title="One step back">‹</button><button type="button" id="next" aria-label="One step on" title="One step on">›</button></span>
+</nav>
+<div class="bar" id="bar" role="group" aria-label="Where the story is; choose a step to jump to it"></div>
+<div class="ctl free" id="free" hidden>
+  <label class="scrub"><span class="lbl">Connections cut</span>
+    <input type="range" id="cut" min="0" max="50" step="0.5" value="0"><output id="cutv" for="cut">0 %</output></label>
+  <span class="where" style="margin:0">Dragging freezes the story. Pick a speed to go on.</span>
+</div>
+
+<div class="notes">
+  <div class="np"><h2>Behind this chapter</h2><div id="note"></div></div>
+  <div class="np"><h2>What is data and what is drawing</h2><dl>
+    <dt>numbers</dt><dd>measured in the project or taken from the cited study; the same as in the deck</dd>
+    <dt>the wave scene</dt><dd>a pilot of an earlier version of the design, on practice networks: a lead, not evidence</dd>
+    <dt>lantern, keepers, wave</dt><dd>a drawing in the manner of a Japanese woodblock print; no existing print is copied</dd>
+    <dt>fig tree, olive tree</dt><dd>an invented example to show the idea; not an experiment</dd></dl>
+    <h2 style="margin-top:14px">Further reading</h2><ol id="refs"></ol></div>
+</div>
+<div class="foot">Interactive story · English · same content and numbers as the deck (references checked for the deck on 2026-11-18) · it plays by itself; keys: space freezes or resumes, → and ← step.</div>
+</div>
+
+<script>
+(function(){
+"use strict";
+window.addEventListener("error", function(e){ var w = document.getElementById("where"); if (w) w.textContent = "script error: " + e.message + " @" + e.lineno; });
+var NS = "http://www.w3.org/2000/svg";
+function el(n, a, p){ var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function $(id){ return document.getElementById(id); }
+function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function lerp(a, b, k){ return a + (b - a) * k; }
+function shuffle(a, R){ for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(R() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+var reduce = (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) || /still/.test(location.hash);
+if (reduce) document.documentElement.classList.add("still");
+
+/* measured: share of told facts answered right, by % of connections cut (pilot, practice networks, mean of three) */
+var EX = [[0,1.000],[5,.993],[10,.959],[15,.820],[20,.571],[25,.290],[30,.108],[35,.012],[40,.000]];
+var HY = [[0,1.000],[10,.993],[20,.964],[25,.923],[27.5,.899],[30,.852],[32.5,.800],[35,.708],[37.5,.603],[40,.439],[42.5,.263],[45,.134],[47.5,.069],[50,.040]];
+function share(D, p){
+  if (p <= D[0][0]) return D[0][1];
+  for (var i = 1; i < D.length; i++) if (p <= D[i][0]) return lerp(D[i-1][1], D[i][1], (p - D[i-1][0]) / (D[i][0] - D[i-1][0]));
+  return D[D.length - 1][1];
+}
+
+/* ---------- networks of cells ---------- */
+var LEAD = 4;
+function makeNet(o){
+  var R = rng(o.seed), pts = [], tries = 0, i, j;
+  while (pts.length < 50 && tries < 40000){
+    tries++;
+    var a = R() * 6.2832, r = Math.sqrt(R()) * 0.97, x = Math.cos(a) * r, y = Math.sin(a) * r, ok = true;
+    for (i = 0; i < pts.length; i++){ var dx = pts[i][0] - x, dy = pts[i][1] - y; if (dx*dx + dy*dy < 0.036){ ok = false; break; } }
+    if (ok) pts.push([x, y]);
+  }
+  var W = [], seen = {};
+  for (i = 0; i < pts.length; i++){
+    var d = [];
+    for (j = 0; j < pts.length; j++){ var ex = pts[j][0] - pts[i][0], ey = pts[j][1] - pts[i][1]; d.push([ex*ex + ey*ey, j]); }
+    d.sort(function(p, q){ return p[0] - q[0]; });
+    for (var k = 1; k <= 3; k++){ j = d[k][1]; var key = i < j ? i + "_" + j : j + "_" + i; if (!seen[key]){ seen[key] = 1; W.push([i, j]); } }
+  }
+  shuffle(W, R);
+  var g = $(o.parent), net = { n: pts.length, pts: pts, pairs: W, wires: [], units: [], cut: -1, lit: -1 };
+  var P = pts.map(function(p){ return [o.cx + p[0] * o.rx, o.cy + p[1] * o.ry]; });
+  W.forEach(function(w, idx){
+    var A = P[w[0]], B = P[w[1]], len = Math.hypot(B[0] - A[0], B[1] - A[1]);
+    var rec = { e: el("line", { x1: A[0].toFixed(1), y1: A[1].toFixed(1), x2: B[0].toFixed(1), y2: B[1].toFixed(1), "class": "wire" }, g),
+      dash: (len * .3).toFixed(1) + " " + (len * .4).toFixed(1) + " " + (len * .3).toFixed(1),
+      mx: (A[0] + B[0]) / 2, my: (A[1] + B[1]) / 2, th: (idx + .5) / W.length * 100 };
+    if (o.drops){ rec.drop = el("circle", { r: (4 + R() * 2.5).toFixed(1), "class": "drop", display: "none" }, $("spray")); rec.src = Math.floor(R() * 1000); rec.bow = 30 + R() * 60; }
+    net.wires.push(rec);
+  });
+  net.order = shuffle(P.map(function(_, i){ return i; }), R);
+  P.forEach(function(p, i){
+    var depth = (p[1] - (o.cy - o.ry)) / (2 * o.ry);
+    net.units[i] = el("circle", { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: ((o.r0 || 5.5) + 3.5 * depth).toFixed(1), "class": "unit lit" }, g);
+  });
+  return net;
+}
+function setNet(net, pct, sh){
+  var cut = Math.round(pct / 100 * net.wires.length), lit = Math.round(sh * net.n), i;
+  if (cut !== net.cut){
+    for (i = 0; i < net.wires.length; i++){
+      var w = net.wires[i], c = i < cut;
+      if (c !== w.c){ w.c = c; w.e.setAttribute("class", c ? "wire cut" : "wire"); if (c) w.e.setAttribute("stroke-dasharray", w.dash); else w.e.removeAttribute("stroke-dasharray"); }
+    }
+    net.cut = cut;
+  }
+  if (lit !== net.lit){
+    for (i = 0; i < net.n; i++) net.units[net.order[i]].setAttribute("class", i < net.n - lit ? "unit dark" : "unit lit");
+    net.lit = lit;
+  }
+}
+var netEx = makeNet({ parent: "nets", cx: 270, cy: 690, rx: 165, ry: 95, seed: 904, drops: true });
+var netHy = makeNet({ parent: "nets", cx: 705, cy: 705, rx: 165, ry: 95, seed: 906, drops: true });
+
+/* chapter 2: one pattern, a hint, fading, and a wrong completion */
+var n1 = makeNet({ parent: "net1", cx: 650, cy: 695, rx: 240, ry: 122, seed: 2, r0: 6.5 });
+function nearest(cx, cy, n, from, excl){
+  var ix = (from || n1.pts.map(function(_, i){ return i; })).filter(function(i){ return !excl || excl.indexOf(i) < 0; });
+  ix.sort(function(a, b){ var p = n1.pts[a], q = n1.pts[b]; return (p[0]-cx)*(p[0]-cx) + (p[1]-cy)*(p[1]-cy) - (q[0]-cx)*(q[0]-cx) - (q[1]-cy)*(q[1]-cy); });
+  return ix.slice(0, n);
+}
+var PA = nearest(-.4, -.05, 15), PB = nearest(.52, .2, 11, null, PA), HINT = nearest(-.85, -.1, 4, PA);
+var WRONG = HINT.concat(nearest(-.6, .1, 6, PA, HINT)); WRONG = WRONG.concat(nearest(-.35, .7, 5, null, PA));
+function setOf(a){ var o = {}; a.forEach(function(i){ o[i] = 1; }); return o; }
+function paint(lit, ghost){
+  n1.units.forEach(function(u, i){ u.setAttribute("class", lit[i] ? "unit lit" : (ghost && ghost[i] ? "unit ghost" : "unit dark")); });
+  n1.wires.forEach(function(w, k){ var p = n1.pairs[k]; w.e.setAttribute("class", lit[p[0]] && lit[p[1]] ? "wire bold" : (ghost && ghost[p[0]] && ghost[p[1]] ? "wire ghostw" : "wire thin")); });
+}
+function restOf(target){
+  var hx = 0, hy = 0;
+  HINT.forEach(function(i){ hx += n1.pts[i][0] / HINT.length; hy += n1.pts[i][1] / HINT.length; });
+  return nearest(hx, hy, 99, target, HINT);
+}
+var REST = { hint: restOf(PA), wrong: restOf(WRONG) }, dyn = null, dynN = -1;
+function completion(kind, t){          /* a pure function of the story time into the step, so freezing holds it */
+  var rest = REST[kind], n = Math.max(0, Math.min(rest.length, Math.floor((t - 1.2) / .16) + 1));
+  if (n === dynN) return;
+  dynN = n;
+  var lit = setOf(HINT); for (var k = 0; k < n; k++) lit[rest[k]] = 1;
+  paint(lit);
+}
+var NET = { pattern: function(){ dyn = null; paint(setOf(PA)); }, hint: function(){ dyn = "hint"; dynN = -1; }, fade: function(){ dyn = null; paint(setOf(PA), setOf(PB)); }, wrong: function(){ dyn = "wrong"; dynN = -1; } };
+
+/* ---------- clouds: billows of outlined, shaded lobes resting on trailing bands of mist ---------- */
+function cloud(x0, base, W, H, seed, tail){
+  var R = rng(seed), g = el("g", {}, $("clouds")), id = "cc" + seed, rows = [], i, u, p, r;
+  var cp = el("clipPath", { id: id }, g); el("rect", { x: x0 - W, y: base - H * 3, width: W * 3, height: H * 3 + 2 }, cp);
+  var lobes = el("g", { "clip-path": "url(#" + id + ")" }, g);
+  function prof(u){ return Math.pow(Math.sin(Math.PI * u), .7) * (.72 + .28 * Math.sin(u * 9 + seed)); }
+  var nb = Math.max(3, Math.round(W / (H * .62))), nf = nb + 1;
+  for (i = 0; i < nb; i++){ u = (i + .5) / nb; p = prof(u); r = H * (.24 + .28 * p); rows.push([x0 + u * W + (R() - .5) * 8, base - r * .5 - H * .42 * p, r, 0]); }
+  for (i = 0; i < nf; i++){ u = (i + .25 + R() * .3) / nf; p = prof(u); r = H * (.16 + .16 * p); rows.push([x0 + u * W, base - r * .35, r, 1]); }
+  rows.forEach(function(c, k){
+    var x = c[0], y = c[1], a = c[2] * .5;
+    el("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: (c[2] + 1.5).toFixed(1), fill: "#17335e", "fill-opacity": ".8" }, lobes);
+    el("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: c[2].toFixed(1), fill: "url(#cloudG)" }, lobes);
+    if (k % 2 === 0 && c[2] > 9) el("path", { d: "M" + (x + a).toFixed(1) + " " + y.toFixed(1) + " A" + a.toFixed(1) + " " + a.toFixed(1) + " 0 0 0 " + (x - a).toFixed(1) + " " + y.toFixed(1) +
+      " A" + (a * .62).toFixed(1) + " " + (a * .62).toFixed(1) + " 0 0 0 " + (x + a * .24).toFixed(1) + " " + y.toFixed(1) + " A" + (a * .34).toFixed(1) + " " + (a * .34).toFixed(1) + " 0 0 0 " + (x - a * .44).toFixed(1) + " " + y.toFixed(1),
+      fill: "none", stroke: "#17335e", "stroke-opacity": ".5", "stroke-width": "1.3", "stroke-linecap": "round" }, lobes);
+  });
+  var hb = Math.max(9, H * .17), band = { fill: "url(#bandG)", stroke: "#17335e", "stroke-opacity": ".62", "stroke-width": "1.2" };
+  function pill(x, y, w, h){ band.x = x.toFixed(1); band.y = y.toFixed(1); band.width = w.toFixed(1); band.height = h.toFixed(1); band.rx = (h / 2).toFixed(1); el("rect", band, g); }
+  pill(tail > 0 ? x0 + W * .5 : x0 - W * .45, base + hb * .62, W * .95, hb * .72);
+  pill(tail > 0 ? x0 + W * 1.02 : x0 - W * .5, base + hb * 1.5, W * .48, hb * .5);
+  pill(tail > 0 ? x0 - W * .12 : x0 - W * .3, base - hb * .42, W * 1.42, hb);
+}
+cloud(1120, 330, 390, 112, 11, 1); cloud(70, 410, 320, 64, 23, 1); cloud(700, 386, 200, 44, 37, -1); cloud(940, 212, 170, 42, 51, -1); cloud(1370, 172, 170, 40, 67, 1);
+
+/* ---------- the wave: scalloped foam and claws along the leading edge ---------- */
+var PX = 1500, PY = 980, tips = [];
+(function(){
+  var R = rng(47), top = $("lipTop"), roof = $("lipRoof"), circ = [], s, P, Q, tx, ty, L, r;
+  function frame(path, at){ P = path.getPointAtLength(at); Q = path.getPointAtLength(at + 2); tx = Q.x - P.x; ty = Q.y - P.y; L = Math.hypot(tx, ty) || 1; tx /= L; ty /= L; }
+  for (s = 0; s < 665;){
+    frame(top, s); r = lerp(30, 5, s / 665) * (.85 + .3 * R());
+    circ.push([P.x - ty * r * .35, P.y + tx * r * .35, r]);
+    if (s < 400) circ.push([P.x - ty * r * 1.35 + tx * r * .5, P.y + tx * r * 1.35 + ty * r * .5, r * .8]);
+    s += r * 1.05;
+  }
+  for (s = 14; s < 175;){
+    frame(roof, s); r = lerp(24, 10, s / 175) * (.85 + .3 * R());
+    circ.push([P.x + ty * r * .35, P.y - tx * r * .35, r]);
+    s += r * 1.1;
+  }
+  circ.forEach(function(c){ el("circle", { cx: c[0].toFixed(1), cy: c[1].toFixed(1), r: (c[2] + 2.6).toFixed(1), fill: "#0b1830" }, $("foamLine")); });
+  circ.forEach(function(c){ el("circle", { cx: c[0].toFixed(1), cy: c[1].toFixed(1), r: c[2].toFixed(1), fill: "#f8f2e3" }, $("foamFill")); });
+  function claw(path, at, roofSide, len){
+    frame(path, at);
+    var ox = roofSide ? -ty : ty, oy = roofSide ? tx : -tx;
+    var dx = ox * (roofSide ? .6 : .45) - .78, dy = oy * (roofSide ? .6 : .45) + .62, dl = Math.hypot(dx, dy); dx /= dl; dy /= dl;
+    var qx = -dy, qy = dx; if (qy < 0){ qx = -qx; qy = -qy; }
+    var w = len * .27, bx = P.x - dx * 8, by = P.y - dy * 8;
+    var tipx = bx + dx * len + qx * len * .32, tipy = by + dy * len + qy * len * .32;
+    var d = "M" + (bx - qx * w / 2).toFixed(1) + " " + (by - qy * w / 2).toFixed(1) +
+      " Q" + (bx + dx * len * .78 - qx * w * .6).toFixed(1) + " " + (by + dy * len * .78 - qy * w * .6).toFixed(1) + " " + tipx.toFixed(1) + " " + tipy.toFixed(1) +
+      " Q" + (bx + dx * len * .5 + qx * w * .3).toFixed(1) + " " + (by + dy * len * .5 + qy * w * .3).toFixed(1) + " " + (bx + qx * w / 2).toFixed(1) + " " + (by + qy * w / 2).toFixed(1);
+    var g = el("g", {}, $("claws"));
+    el("path", { d: d + " Z", fill: "#f8f2e3" }, g);
+    el("path", { d: d, fill: "none", stroke: "#0b1830", "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-linecap": "round" }, g);
+    for (var i = 0; i < 2; i++){
+      var k = 10 + R() * len * .5, j = (R() - .5) * 26;
+      el("circle", { cx: (tipx + dx * k + qx * (k * .5 + j)).toFixed(1), cy: (tipy + dy * k + qy * (k * .5 + j)).toFixed(1), r: (2.6 + R() * 3.4).toFixed(1), fill: "#f8f2e3", stroke: "#0b1830", "stroke-width": 1.6 }, g);
+    }
+    tips.push({ g: g, bx: bx, by: by, x: tipx, y: tipy, ph: R() * 6.28 });
+  }
+  [0, 30, 62, 96, 132, 170, 210, 252, 296, 342, 392].forEach(function(at){ claw(top, at, false, lerp(108, 36, at / 392) * (.88 + .24 * R())); });
+  [34, 70, 108].forEach(function(at){ claw(roof, at, true, lerp(64, 36, at / 108) * (.88 + .24 * R())); });
+})();
+
+/* ---------- the graph ---------- */
+function gx(p){ return 64 + p * 7.2; } function gy(v){ return 212 - v * 154; }
+$("gEx").setAttribute("points", EX.map(function(d){ return gx(d[0]).toFixed(1) + "," + gy(d[1]).toFixed(1); }).join(" "));
+$("gHy").setAttribute("points", HY.map(function(d){ return gx(d[0]).toFixed(1) + "," + gy(d[1]).toFixed(1); }).join(" "));
+
+/* ---------- the story ---------- */
+var CH = ["", "A sentence is told", "How you would keep it", "Two keepers", "The wave", "Four honest answers", "Keeping the numbers honest", "Where the story is now"];
+var WS = [.10, .14, .22, .40, 1, 1, .5, .5];          /* how near the wave is, by chapter */
+var B = [
+ { id: "0.1", lan: [330, 700, 1.5, ""], t: "A story about how machines remember, how you remember, and what a research project is trying to build between the two. Far out on the right, a wave is rising. <strong>Keep an eye on it.</strong>" },
+ { id: "1.1", lan: [330, 700, 1.5, ""], lab: 1, t: "Someone tells an AI assistant one small thing: <em>Maja planted a fig tree.</em> Follow that sentence. In this story it is a paper lantern set on the water, and as long as it is remembered, it stays lit." },
+ { id: "1.2", lan: [300, 690, 1.05, ""], lab: 1, t: "Today's assistants keep it the way an office would. The sentence goes onto a card, the card goes into a cabinet, and there it stays, unchanged, until someone deletes it." },
+ { id: "1.3", lan: [300, 690, 1.05, ""], lab: 1, t: "Asked later, the system pulls out the cards that match the question best. That works. But <strong>a match score is all it has</strong>: it has no sense of how well it knows a thing, and nothing it keeps grows stronger with use or fades without it." },
+ { id: "2.1", lan: [215, 725, 1.15, ""], lab: 1, net: "pattern", t: "You would keep the same sentence differently. Your brain makes no card. A group of cells becomes active together, and the connections between them grow stronger. <strong>The memory is that pattern.</strong>" },
+ { id: "2.2", lan: [215, 725, 1.15, ""], lab: 1, net: "hint", t: "Later a hint is enough: the smell of figs, half a name. A few cells of the pattern wake, and they wake the rest. Scientists call it pattern completion." },
+ { id: "2.3", lan: [215, 725, 1.15, ""], lab: 1, net: "fade", t: "What you return to stays strong. What you never use fades, slowly. That is not a fault: it is how a memory keeps what matters and lets the rest go." },
+ { id: "2.4", lan: [215, 725, 1.15, "dim"], lab: 2, net: "wrong", t: "And the price. The same filling-in that recovers a memory from a hint can build one that never happened. In a classic experiment, people “recognised” a word they had never been given about as often as the words they had: <strong>0.84 against 0.86</strong>." },
+ { id: "3.1", t: "So there are two ways to keep a lantern lit. <strong>The librarian</strong> keeps an exact catalogue. Every card is found, and none is ever made up. But tear one card and that book is gone for good, and a vague question gets no answer at all." },
+ { id: "3.2", t: "<strong>The friend</strong> remembers the gist: finds the thing from half a hint, and still copes when details are missing. But now and then the friend is sure of something that never happened." },
+ { id: "3.3", t: "Your brain uses both. The project asks whether a machine's memory can have <strong>the friend's gifts with the librarian's honesty</strong>. Meanwhile, look right: the wave has come closer." },
+ { id: "4.1", pct: 0, t: "Now the wave is here: damage. In the project's own test a memory is told 300 facts. Then its connections are cut at random, a few at a time, and after every cut it is asked all 300 again. You are watching from the height of a single cell." },
+ { id: "4.2", pct: 10, t: "With a tenth of the connections gone, both kinds of memory still answer almost everything. Every drop that leaves the crest cuts one more connection." },
+ { id: "4.3", pct: 30, t: "Then the librarian's kind breaks, the way a wave does. With three tenths cut it answers about one fact in ten. With some of the friend's way added, the hybrid design <strong>still answers 85 in 100</strong>." },
+ { id: "4.4", pct: 45, free: true, t: "Further out the hybrid falls too. Later, but <strong>still a fall, not a slope</strong>. A brain fades gently instead, and that is not solved yet. These curves are practice runs of an earlier version: a safety check added since then cost the hybrid part of its lead." },
+ { id: "5.1", t: "After the wave, ask about the fig tree. A memory like this should not just say yes or no. The project's memory gives one of four answers, as a person might: it knows, it rings a bell, it knew once, or it does not know." },
+ { id: "5.2", t: "The answer it must never give is a fifth one: <strong>a confident wrong answer</strong>. In the most recent locked test, ten fresh networks gave 124,280 answers, and none of them was false." },
+ { id: "6.1", t: "A story like this is easy to tell too well, so the project guards its own numbers. Before a test runs, its plan and its pass marks are written down and locked. <strong>Nothing can be adjusted afterwards.</strong>" },
+ { id: "6.2", t: "The test then runs on ten fresh networks that nobody has practised on. A separate checker recounts every verdict from the raw files, without being told what to expect. And each ability is compared with the simplest tool that does the same job." },
+ { id: "6.3", t: "When a test fails, the failure stays on the record. One locked test found 19 false answers under a heavy load. The way answers are read out was rebuilt, and the next locked test found none. The wave scene you saw is practice, and it is labelled so." },
+ { id: "6.4", t: "The newest case. Before the next test could be locked, a second reviewer checked its plan and code and found a gap: two similar words could be mixed up. Practice runs confirmed it. <strong>The test was held back</strong> until the fix, and its price, are measured." },
+ { id: "7.1", lan: [578, 612, .7, ""], t: "The work goes in four stages, and each must pass its locked tests before the next is built on it. The first, a memory that works, is done. The second, talking to it through a language model, is under way." },
+ { id: "7.2", lan: [1040, 790, 1.35, ""], lab: 1, t: "The wave has not landed, and it has not gone away. The gentle fade is still an open problem. But the lantern is still lit, and nothing false has been written on it. <em>To be continued.</em>" }
+];
+var NOTE = [
+ "<p>The story tells what the deck tells, in seven short chapters. It plays by itself: the time buttons under the picture freeze it or change its speed, and the bar jumps to any step.</p>",
+ "<p>Many AI assistants now come with a memory: they save notes or documents and later look up the ones that match a question (retrieval). It is useful, and it behaves like a filing system: kept until deleted, a match score, no sense of knowing.</p>",
+ "<p>Cells that are active together strengthen their connections (Hebb). A part of a stored pattern can bring back the whole (pattern completion: Marr, Hopfield). Memories fade without use and hold with it (Ebbinghaus; Bjork &amp; Bjork). The false-memory numbers are from Roediger &amp; McDermott (1995, Exp. 1): a word never presented was recognised as studied at 0.84, against 0.86 for words actually studied.</p>",
+ "<p>The librarian and the friend are two ways of remembering that brains use side by side. Scientists call them pattern separation (keeping similar memories apart) and pattern completion (filling a memory in from a part).</p>",
+ "<p>A pilot on three practice networks, 300 told facts each; each number is their mean. Pilot readings are leads, not evidence, and the frozen test on new networks has not run. Between measured points the scene draws a straight line; the exact-style memory was measured up to 40 % cut. Lit cells show the same share as the counter, 50 lights in each picture.</p><p><b>Since this pilot the design has changed</b> (state of 18 November 2026). A review found that two similar words could be mixed up. The check added against it gave no false answer in its first practice runs, and fewer right answers under damage: on two practice networks and a list of 720 questions, 574 and 598 right at 30 % cut, against 636 and 640 without the check. A refined check is in practice runs. The curves shown are the earlier version's.</p>",
+ "<p>People have these graded feelings too: the tip of the tongue, the sense of knowing without recalling. The count is from the project's seventeenth locked test. None in 124,280 does not prove “never”: the test bounds the rate, with 95 % confidence, at about 1 false answer in 9,000 distinct questions. The count belongs to the memory as it stood in that test; the hybrid design of the wave scene has not had a locked test yet.</p>",
+ "<p>Each claim of the project comes from a test whose design, material and pass rules were fixed before it ran, on networks never used in development, with an independent recount of every verdict. Practice runs (pilots) are called practice and never count as evidence.</p><p><b>The newest case</b> (18 November 2026; practice runs, not evidence). A second independent review of the drafted test found that two words the memory stores too much alike could be confused, one word's fact given as the other's. On two practice networks with such pairs built on purpose, 12 of 12 trap questions were answered falsely on the undamaged memory. With the check now in practice runs: none, at every level of damage read (0 to 50 % cut), at a cost in right answers under damage. The test has not been locked. It was also moved to fresh networks, because the reviewer had looked at the material planned for it.</p>",
+ "<p>Stage 1, the memory itself, passed every locked test. Stage 2, language around it, is half done. Stages 3 (learning all the time) and 4 (judging its own memory) have not started. Open problems: the gentle fade, and repair from what is left. The next locked test, of the hybrid design, is drafted and held back until the newly found gap is closed and re-read on practice networks (state of 18 November 2026).</p>"
+];
+var REFS = [
+ [],
+ ["Lewis, P. et al. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. <i>NeurIPS 33</i>.", "Packer, C. et al. (2023). MemGPT: towards LLMs as operating systems. arXiv:2310.08560"],
+ ["Hebb, D. O. (1949). <i>The Organization of Behavior.</i> New York: Wiley.", "Hopfield, J. J. (1982). <i>PNAS</i> 79(8), 2554–2558.", "Ebbinghaus, H. (1885). <i>Über das Gedächtnis.</i> Leipzig: Duncker &amp; Humblot.", "Roediger, H. L. &amp; McDermott, K. B. (1995). Creating false memories: remembering words not presented in lists. <i>JEP: LMC</i> 21(4), 803–814."],
+ ["Yassa, M. A. &amp; Stark, C. E. L. (2011). Pattern separation in the hippocampus. <i>Trends in Neurosciences</i> 34(10), 515–525.", "Schacter, D. L. (2001). <i>The Seven Sins of Memory.</i> Boston: Houghton Mifflin."],
+ ["Rumelhart, D. E., McClelland, J. L. &amp; PDP Research Group (1986). <i>Parallel Distributed Processing</i>, vol. 1. MIT Press.", "McClelland, J. L., McNaughton, B. L. &amp; O'Reilly, R. C. (1995). <i>Psychological Review</i> 102(3), 419–457."],
+ ["Brown, R. &amp; McNeill, D. (1966). The “tip of the tongue” phenomenon. <i>J. Verbal Learning and Verbal Behavior</i> 5(4), 325–337.", "Koriat, A. (1993). How do we know that we know? <i>Psychological Review</i> 100(4), 609–639."],
+ ["Nosek, B. A. et al. (2018). The preregistration revolution. <i>PNAS</i> 115(11), 2600–2606.", "Ioannidis, J. P. A. (2005). Why most published research findings are false. <i>PLoS Medicine</i> 2(8): e124."],
+ ["Ebbinghaus, H. (1885). <i>Über das Gedächtnis.</i>", "Schacter, D. L. (2001). <i>The Seven Sins of Memory.</i>"]
+];
+
+/* ---------- state ---------- */
+var cur = 0, pct = 0, pctT = 0, ws = WS[0], wsT = WS[0], mode = "frozen", lastRun = "normal";
+var amb = 0, dirty = true, par = 0, parT = 0;
+var range = $("cut"), txt = {}, lan = $("lan"), acts = document.querySelectorAll(".act");
+function put(id, s){ if (txt[id] !== s){ txt[id] = s; $(id).textContent = s; } }
+function chOf(b){ return parseInt(b.id, 10); }
+
+function draw(){
+  var se = share(EX, pct), sh = share(HY, pct), a = lerp(2.5, -4.5, pct / 50), ar = a * Math.PI / 180, ca = Math.cos(ar), sa = Math.sin(ar), i;
+  setNet(netEx, pct, se); setNet(netHy, pct, sh);
+  $("waveOuter").setAttribute("transform", "translate(1560 455) scale(" + ws.toFixed(4) + ") translate(-1560 -455)");
+  $("wClipR").setAttribute("height", (300 + (ws <= .5 ? 455 : lerp(455, 1100, (ws - .5) / .5))).toFixed(0));
+  $("wave").setAttribute("transform", "translate(" + par.toFixed(2) + " 0) rotate(" + a.toFixed(3) + " " + PX + " " + PY + ")");
+  for (i = 0; i < tips.length; i++) tips[i].g.setAttribute("transform", "rotate(" + (Math.sin(amb * .7 + tips[i].ph) * 3.5).toFixed(2) + " " + tips[i].bx.toFixed(1) + " " + tips[i].by.toFixed(1) + ")");
+  [netEx, netHy].forEach(function(net){
+    for (var k = 0; k < net.wires.length; k++){
+      var w = net.wires[k], u = (pct - (w.th - LEAD)) / LEAD;
+      if (u > 0 && u < 1 && ws > .97){
+        var t = tips[w.src % tips.length], x = t.x - PX, y = t.y - PY, sx = PX + x * ca - y * sa + par, sy = PY + x * sa + y * ca;
+        var e = u * (.35 + .65 * u), cx = (sx + w.mx) / 2 - w.bow, cy = Math.min(sy, w.my) - 20, v = 1 - e;
+        w.drop.setAttribute("cx", (v*v*sx + 2*v*e*cx + e*e*w.mx).toFixed(1));
+        w.drop.setAttribute("cy", (v*v*sy + 2*v*e*cy + e*e*w.my).toFixed(1));
+        if (!w.on){ w.on = true; w.drop.removeAttribute("display"); }
+      } else if (w.on){ w.on = false; w.drop.setAttribute("display", "none"); }
+    }
+  });
+  var x = gx(pct).toFixed(1);
+  $("gM").setAttribute("x1", x); $("gM").setAttribute("x2", x);
+  $("gDe").setAttribute("cx", x); $("gDe").setAttribute("cy", gy(se).toFixed(1));
+  $("gDh").setAttribute("cx", x); $("gDh").setAttribute("cy", gy(sh).toFixed(1));
+  var ps = (Math.round(pct * 2) / 2).toString() + " %";
+  put("cEx", se.toFixed(2)); put("cHy", sh.toFixed(2)); put("sEx", pct > 40 ? "last measured at 40 % cut" : "of told facts answered right"); put("cutv", ps);
+  if (document.activeElement !== range || mode !== "frozen") range.value = pct;
+  range.setAttribute("aria-valuetext", ps + " of connections cut: exact-style memory " + se.toFixed(2) + ", hybrid design " + sh.toFixed(2));
+  dirty = false;
+}
+/* ---------- the story plays by itself; one time dial sets its speed ---------- */
+var SPEED = { frozen: 0, slow: .5, normal: 1, fast: 2 }, te = 0, segs = [], chps = [];
+B.forEach(function(b){ b.dur = 2.2 + b.t.replace(/<[^>]+>/g, "").replace(/&\w+;/g, " ").length / 28; });      /* seconds at normal speed: time to read, plus a pause */
+function target(b){ return b.pct != null ? b.pct : (chOf(b) > 4 ? 30 : 0); }
+function setMode(v){
+  var was = mode; mode = v; if (v !== "frozen") lastRun = v;
+  if (was === "frozen" && v !== "frozen") pctT = target(B[cur]);
+  document.querySelectorAll(".ctl button[data-mode]").forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.mode === v ? "true" : "false"); });
+  dirty = true;
+}
+function go(i){
+  i = Math.max(0, Math.min(B.length - 1, i));
+  var b = B[i], ch = chOf(b), was = chOf(B[cur]), still = reduce || SPEED[mode] === 0; cur = i; te = 0;
+  $("kick").textContent = ch ? "Chapter " + ch + " of 7" : "An interactive story";
+  $("ttl").textContent = ch ? CH[ch] : "The Wave and the Memory";
+  var t = $("txt"); t.innerHTML = b.t; t.style.animation = "none"; void t.offsetWidth; t.style.animation = "";
+  $("num").textContent = "Story · " + (i + 1) + " / " + B.length;
+  acts.forEach(function(e){ var on = " " + e.getAttribute("data-on") + " "; e.classList.toggle("on", on.indexOf(" " + b.id + " ") >= 0 || on.indexOf(" " + ch + ".* ") >= 0); });
+  if (b.lan){ lan.style.transform = "translate(" + b.lan[0] + "px," + b.lan[1] + "px) scale(" + b.lan[2] + ")"; lan.setAttribute("class", "lan " + b.lan[3] + " l" + (b.lab || 0)); lan.style.opacity = 1; }
+  else lan.style.opacity = 0;
+  if (b.net) NET[b.net](); else dyn = null;
+  if (dyn) completion(dyn, still ? 99 : 0);
+  wsT = WS[ch]; pctT = target(b);
+  if (ch === 4 && was !== 4 && b.pct === 0) pct = 0;
+  if (still){ ws = wsT; pct = pctT; }
+  $("free").hidden = ch !== 4;
+  $("note").innerHTML = NOTE[ch];
+  $("refs").innerHTML = REFS[ch].map(function(r){ return "<li>" + r + "</li>"; }).join("") || "<li>See the chapters that follow.</li>";
+  $("where").textContent = ch ? "Chapter " + ch + " · " + CH[ch] : "Prologue";
+  segs.forEach(function(s, k){ s.classList.toggle("done", k < i); s.firstChild.style.width = ""; if (k === i) s.setAttribute("aria-current", "step"); else s.removeAttribute("aria-current"); });
+  chps.forEach(function(c, k){ c.classList.toggle("on", k === ch); });
+  $("prev").disabled = i === 0;
+  try { history.replaceState(null, "", "#b=" + b.id + (/still/.test(location.hash) ? "&still" : "")); } catch (e) {}
+  dirty = true;
+}
+(function(){
+  var bar = $("bar"), grp = null, lastCh = -1;
+  B.forEach(function(b, i){
+    var ch = chOf(b);
+    if (ch !== lastCh){
+      grp = document.createElement("div"); grp.className = "chp"; grp.total = 0;
+      var row = document.createElement("div"); row.className = "segs"; grp.appendChild(row);
+      var lab = document.createElement("small"); lab.textContent = ch ? ch + " · " + CH[ch] : "Prologue"; grp.appendChild(lab);
+      bar.appendChild(grp); chps.push(grp); lastCh = ch;
+    }
+    var s = document.createElement("button"); s.type = "button"; s.style.flexGrow = b.dur.toFixed(1);
+    s.title = ch ? "Chapter " + ch + ": " + CH[ch] : "Prologue"; s.setAttribute("aria-label", s.title + ", step " + (i + 1) + " of " + B.length);
+    s.appendChild(document.createElement("i")); s.onclick = function(){ go(i); };
+    grp.firstChild.appendChild(s); grp.total += b.dur; grp.style.flexGrow = grp.total.toFixed(1); segs.push(s);
+  });
+})();
+$("next").onclick = function(){ go(cur === B.length - 1 ? 0 : cur + 1); };
+$("prev").onclick = function(){ go(cur - 1); };
+document.querySelectorAll(".ctl button[data-mode]").forEach(function(b){ b.onclick = function(){ setMode(b.dataset.mode); }; });
+range.addEventListener("input", function(){ setMode("frozen"); pct = pctT = parseFloat(range.value); dirty = true; });
+document.addEventListener("keydown", function(e){
+  var tag = e.target && e.target.tagName;
+  if (tag === "INPUT") return;
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ e.preventDefault(); if (cur < B.length - 1) go(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ e.preventDefault(); go(cur - 1); }
+  else if (e.key === "Home"){ go(0); }
+  else if (e.key === " " && tag !== "BUTTON"){ e.preventDefault(); setMode(mode === "frozen" ? lastRun : "frozen"); }
+});
+if (!reduce) $("stage").addEventListener("pointermove", function(e){ var r = this.getBoundingClientRect(); parT = ((e.clientX - r.left) / r.width - .5) * -10; });
+
+var last = performance.now();
+function tick(d){                      /* d = seconds of story time */
+  te += d;
+  var b = B[cur], end = cur === B.length - 1;
+  if (te >= b.dur + (end ? 5 : 0)) go(end ? 0 : cur + 1);            /* the story never ends: it draws back to the start */
+  else {
+    segs[cur].firstChild.style.width = (Math.min(1, te / b.dur) * 100).toFixed(1) + "%";
+    if (dyn && !reduce) completion(dyn, te);
+  }
+  if (Math.abs(wsT - ws) > .0005){ ws += (wsT - ws) * Math.min(1, d * 2.4); if (Math.abs(wsT - ws) <= .0005) ws = wsT; }
+  if (ws > .2) amb += d;
+  if (Math.abs(pctT - pct) > .01){ var step = 6 * d; pct = Math.abs(pctT - pct) <= step ? pctT : pct + (pctT > pct ? step : -step); }
+  dirty = true;
+}
+function frame(now){
+  var dt = Math.min(.05, (now - last) / 1000), d = dt * SPEED[mode]; last = now;
+  if (Math.abs(parT - par) > .02){ par += (parT - par) * Math.min(1, dt * 4); dirty = true; }
+  if (d > 0) tick(d);
+  if (dirty) draw();
+  requestAnimationFrame(frame);
+}
+var m = /b=([\d.]+)/.exec(location.hash), ff = /t=(\d+)/.exec(location.hash), start = 0;
+if (m) for (var i = 0; i < B.length; i++) if (B[i].id === m[1]) start = i;
+ws = WS[chOf(B[start])];
+setMode(reduce ? "frozen" : "normal");
+lan.style.transition = "none";
+go(start);
+pct = pctT; ws = wsT;
+if (ff) for (var k = 0; k < ff[1] * 20; k++) tick(.05);          /* "#t=40": start as if 40 seconds had been played (a check of the playback) */
+void lan.getBoundingClientRect(); lan.style.transition = "";
+draw(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
